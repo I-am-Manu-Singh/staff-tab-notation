@@ -1,4 +1,4 @@
-name: Publish to Maven Central
+name: Publish to Maven Central Portal
 
 on:
   release:
@@ -21,10 +21,31 @@ jobs:
       - name: Setup Gradle
         uses: gradle/actions/setup-gradle@v3
 
-      - name: Publish to Maven Central
-        run: ./gradlew publishAllPublicationsToMavenCentralRepository
+      - name: Build and Sign Maven Publications to Local Staging
+        run: ./gradlew publishAllPublicationsToLocalStagingRepository
         env:
-          MAVEN_CENTRAL_USERNAME: ${{ secrets.MAVEN_CENTRAL_USERNAME }}
-          MAVEN_CENTRAL_PASSWORD: ${{ secrets.MAVEN_CENTRAL_PASSWORD }}
           SIGNING_KEY: ${{ secrets.SIGNING_KEY }}
           SIGNING_PASSWORD: ${{ secrets.SIGNING_PASSWORD || '' }}
+
+      - name: Create Bundle ZIP for Central Portal
+        run: |
+          cd build/repos/staging
+          zip -r ../../../bundle.zip .
+          cd ../../..
+          ls -lh bundle.zip
+
+      - name: Upload Bundle to Maven Central Portal
+        run: |
+          AUTH_HEADER=$(echo -n "${{ secrets.MAVEN_CENTRAL_USERNAME }}:${{ secrets.MAVEN_CENTRAL_PASSWORD }}" | base64)
+          RESPONSE=$(curl --request POST \
+            --url https://central.sonatype.com/api/v1/publisher/upload?publishingType=AUTOMATIC \
+            --header "Authorization: Bearer $AUTH_HEADER" \
+            --form bundle=@bundle.zip)
+          echo "Portal Response: $RESPONSE"
+          # Check if deployment ID is returned
+          if [[ "$RESPONSE" == *"deploymentId"* ]] || [[ "$RESPONSE" == *"id"* ]] || [[ "$RESPONSE" =~ ^[a-f0-9-]+$ ]]; then
+            echo "Successfully submitted deployment to Maven Central Portal!"
+          elif [[ "$RESPONSE" == *"error"* ]] || [[ "$RESPONSE" == *"Unauthorized"* ]]; then
+            echo "Error response from Sonatype Central Portal"
+            exit 1
+          fi
