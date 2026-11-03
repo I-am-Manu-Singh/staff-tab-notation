@@ -62,8 +62,14 @@ android {
     }
 }
 
+val javadocJar by tasks.registering(Jar::class) {
+    archiveClassifier.set("javadoc")
+}
+
 publishing {
     publications.withType<MavenPublication> {
+        artifact(javadocJar)
+
         pom {
             name.set("Staff and Tab Notation Viewer")
             description.set("Production-grade Kotlin Multiplatform Compose component for musical staff and guitar/bass tablature notation.")
