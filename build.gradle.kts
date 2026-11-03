@@ -114,7 +114,7 @@ publishing {
 
 signing {
     val signingKey = project.findProperty("signingKey")?.toString() ?: System.getenv("SIGNING_KEY")
-    val signingPassword = project.findProperty("signingPassword")?.toString() ?: System.getenv("SIGNING_PASSWORD")
+    val signingPassword = project.findProperty("signingPassword")?.toString() ?: System.getenv("SIGNING_PASSWORD") ?: ""
     if (!signingKey.isNullOrBlank()) {
         useInMemoryPgpKeys(signingKey, signingPassword)
         sign(publishing.publications)
