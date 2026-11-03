@@ -30,7 +30,7 @@ object MusicXmlParser {
             .ifBlank { "Traditional / Unknown" }
 
         var tempo = 120f
-        val tempoMatch = Regex("""<sound[^>]*tempo="([\d.]+)"""").find(xmlString)
+        val tempoMatch = Regex("""(?s)<sound[^>]*tempo="([\d.]+)"""").find(xmlString)
         if (tempoMatch != null) {
             tempo = tempoMatch.groupValues[1].toFloatOrNull() ?: 120f
         }
@@ -52,7 +52,7 @@ object MusicXmlParser {
         val keySignature = matchKeySignature(keyFifths, keyMode)
 
         // Parse measures
-        val measureRegex = Regex("""<measure\b[^>]*>(.*?)</measure>""", RegexOption.DOT_MATCHES_ALL)
+        val measureRegex = Regex("""(?s)<measure\b[^>]*>(.*?)</measure>""")
         val measureMatches = measureRegex.findAll(xmlString).toList()
 
         var currentDivisions = 1
@@ -92,7 +92,7 @@ object MusicXmlParser {
             }
 
             // Parse Notes inside Measure
-            val noteRegex = Regex("""<note\b[^>]*>(.*?)</note>""", RegexOption.DOT_MATCHES_ALL)
+            val noteRegex = Regex("""<note\b[^>]*>(.*?)</note>""")
             val noteMatches = noteRegex.findAll(mContent).toList()
 
             val notes = mutableListOf<ScoreNote>()
@@ -272,7 +272,7 @@ object MusicXmlParser {
         } else {
             "<$tag\\b[^>]*>(.*?)</$tag>"
         }
-        val match = Regex(pattern, RegexOption.DOT_MATCHES_ALL).find(xml)
+        val match = Regex(pattern).find(xml)
         return match?.groupValues?.get(1)?.trim() ?: ""
     }
 }

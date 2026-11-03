@@ -60,10 +60,9 @@ object ScoreImporter {
 
             val score = parsedScore ?: Score(
                 title = fileName.substringBeforeLast("."),
-                bpm = 120,
-                timeSignatureNumerator = 4,
-                timeSignatureDenominator = 4,
-                measures = listOf(Measure(number = 1, notes = emptyList()))
+                tempo = 120f,
+                timeSignature = "4/4",
+                measures = listOf(Measure(measureIndex = 1, notes = emptyList()))
             )
 
             // Compute total playback duration in milliseconds

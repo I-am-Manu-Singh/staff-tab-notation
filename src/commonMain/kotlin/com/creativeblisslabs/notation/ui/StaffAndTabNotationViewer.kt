@@ -10,8 +10,6 @@ import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.verticalScroll
-import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.filled.MusicNote
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
@@ -636,7 +634,7 @@ private fun computeStaffLayout(
                 val distinctPos = beamEligible.map { it.note.position }.distinct().sorted()
                 if (distinctPos.size < 2) continue
 
-                val posGroups = beamEligible.groupBy { it.note.position }.toSortedMap()
+                val posGroups = beamEligible.groupBy { it.note.position }.toList().sortedBy { (k, _) -> k }.toMap()
 
                 val contiguousRuns = mutableListOf<List<Float>>()
                 var currentRun = mutableListOf<Float>()
@@ -1251,10 +1249,9 @@ fun StaffAndTabNotationViewer(
     ) {
         if (score != null && score.measures.isNotEmpty()) {
             if (score.isPdfScore && !score.pdfUri.isNullOrBlank()) {
-                PdfDocumentViewer(
-                    uriString = score.pdfUri,
-                    modifier = Modifier.fillMaxSize()
-                )
+                Box(modifier = Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
+                    Text("PDF Score: ${score.title}", color = primaryColor)
+                }
             } else {
                 Column(
                     modifier = Modifier
@@ -1897,11 +1894,10 @@ fun StaffAndTabNotationViewer(
                     horizontalAlignment = Alignment.CenterHorizontally,
                     verticalArrangement = Arrangement.Center
                 ) {
-                    Icon(
-                        imageVector = Icons.Default.MusicNote,
-                        contentDescription = null,
-                        modifier = Modifier.size(36.dp),
-                        tint = Color.Gray.copy(alpha = 0.5f)
+                    Text(
+                        text = "𝄞",
+                        fontSize = 36.sp,
+                        color = Color.Gray.copy(alpha = 0.5f)
                     )
                     Spacer(modifier = Modifier.height(12.dp))
                     Text(
@@ -2208,7 +2204,7 @@ private fun drawTabMeasureContent(
                         color = config.primaryColor
                     )
                     val hpLayout = textMeasurer.measure(label, TextStyle(color = config.primaryColor, fontSize = 8.sp, fontWeight = FontWeight.Bold))
-                    drawText(hpLayout, topLeft = Offset(midX - hpLayout.size.width / 2f, ny - config.lineSpacing * 1.15f))
+                    drawText(hpLayout, topLeft = Offset(midX - hpLayout.size.width.toFloat() / 2f, ny - config.lineSpacing * 1.15f))
                 }
                 TabArticulation.SLIDE_UP, TabArticulation.LEGATO_SLIDE_UP -> {
                     val targetX = nextOnString?.nx ?: (nx + 18f)
@@ -2224,7 +2220,7 @@ private fun drawTabMeasureContent(
                 }
                 TabArticulation.RELEASE -> {
                     val rLayout = textMeasurer.measure(MusicSymbols.RELEASE, TextStyle(color = config.primaryColor, fontSize = 8.sp, fontWeight = FontWeight.Bold))
-                    drawText(rLayout, topLeft = Offset(nx - rLayout.size.width / 2f, ny - config.lineSpacing * 0.9f))
+                    drawText(rLayout, topLeft = Offset(nx - rLayout.size.width.toFloat() / 2f, ny - config.lineSpacing * 0.9f))
                 }
                 TabArticulation.TAP -> {
                     val tLayout = textMeasurer.measure("T", TextStyle(color = config.primaryColor, fontSize = 8.5.sp, fontWeight = FontWeight.Black))
@@ -2326,7 +2322,7 @@ private fun drawTabMeasureContent(
         if (showRhythmStems) {
             val stemTopY = tBase + (5f * config.lineSpacing) + 5f
             val stemBottomY = stemTopY + 15f
-            val posMap = layout.notes.filter { !it.note.grace }.groupBy { it.note.position }.toSortedMap()
+            val posMap: Map<Float, List<PrecomputedTabNote>> = layout.notes.filter { !it.note.grace }.groupBy { it.note.position }.toList().sortedBy { (k, _) -> k }.toMap()
             val positions = posMap.keys.toList()
 
             positions.forEach { pos ->

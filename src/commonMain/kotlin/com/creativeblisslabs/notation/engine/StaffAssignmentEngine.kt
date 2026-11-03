@@ -1,6 +1,7 @@
 package com.creativeblisslabs.notation.engine
 
 import com.creativeblisslabs.notation.model.ScoreNote
+import com.creativeblisslabs.notation.model.StaffAssignment
 import kotlin.math.abs
 
 /**

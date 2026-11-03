@@ -1,4 +1,7 @@
 package com.creativeblisslabs.notation.model
+import com.creativeblisslabs.notation.model.Accidental
+import com.creativeblisslabs.notation.model.KeySignature
+import com.creativeblisslabs.notation.model.HarmonicType
 
 import androidx.compose.material3.ColorScheme
 import androidx.compose.ui.graphics.Color
@@ -383,7 +386,7 @@ fun Score.dumpAsText(): String {
         val timeSigStr = "$num/$den"
 
         sb.appendLine("########################################################################################################################")
-        sb.appendLine("MEASURE #$mNum  |  TimeSig: $timeSigStr (Nominal Capacity: %.2f beats)  |  Key: ${measure.keySignature.name}  |  Barline: ${measure.barline}".format(nominalCapacity))
+        sb.appendLine("MEASURE #$mNum  |  TimeSig: $timeSigStr (Nominal Capacity: $nominalCapacity beats)  |  Key: ${measure.keySignature.name}  |  Barline: ${measure.barline}")
         sb.appendLine("########################################################################################################################")
 
         val measureFlags = mutableListOf<String>()
@@ -407,7 +410,7 @@ fun Score.dumpAsText(): String {
         }
 
         if (measure.hairpins.isNotEmpty()) {
-            sb.appendLine("  Hairpins           : " + measure.hairpins.joinToString { "${it.type.name}[%.2fb..%.2fb]".format(it.startPosition, it.endPosition) })
+            sb.appendLine("  Hairpins           : " + measure.hairpins.joinToString { "${it.type.name}[${it.startPosition}b..${it.endPosition}b]" })
         }
 
         if (measure.pedalEvents.isNotEmpty()) {
@@ -419,7 +422,7 @@ fun Score.dumpAsText(): String {
                     67 -> "Soft/UnaCorda (CC#67)"
                     else -> "CC#${p.pedalType}"
                 }
-                sb.appendLine("    #${pIdx + 1}: Pos=%.2fb | %s | State=%s".format(p.position, typeName, if (p.isPressed) "DOWN (PRESSED)" else "UP (RELEASED)"))
+                sb.appendLine("    #${pIdx + 1}: Pos=${p.position}b | $typeName | State=${if (p.isPressed) "DOWN (PRESSED)" else "UP (RELEASED)"}")
             }
         }
 
@@ -431,9 +434,7 @@ fun Score.dumpAsText(): String {
 
         if (sortedNotes.isNotEmpty()) {
             sb.appendLine("  ┌─ NOTES TABLE (${sortedNotes.size} elements):")
-            sb.appendLine("  │ %-3s | %-6s | %-4s | %-7s | %-6s | %-6s | %-6s | %-5s | %-5s | %-6s | %-5s | %-9s | %-8s | %s".format(
-                "Idx", "Pitch", "MIDI", "Freq(Hz)", "Pos(b)", "Ticks", "Dur(b)", "Clef", "Hand", "Voice", "Stem", "BeamGrp", "Accident", "Details & Attributes"
-            ))
+            sb.appendLine("  │ Idx | Pitch | MIDI | Freq(Hz) | Pos(b) | Ticks | Dur(b) | Clef | Hand | Voice | Stem | BeamGrp | Accident | Details & Attributes")
             sb.appendLine("  ├─" + "─".repeat(116))
 
             var prevPos = -1.0f
@@ -453,7 +454,7 @@ fun Score.dumpAsText(): String {
                     null -> "AUTO"
                 }
                 val ticks = (n.position * 480).toInt()
-                val deltaStr = if (prevPos >= 0f) "+%.2fb".format(n.position - prevPos) else "BEAT_0"
+                val deltaStr = if (prevPos >= 0f) "+${n.position - prevPos}b" else "BEAT_0"
                 prevPos = n.position
 
                 val attrList = mutableListOf<String>()
@@ -491,9 +492,7 @@ fun Score.dumpAsText(): String {
                 if (n.letRing) attrList.add("LetRing")
                 if (n.vibrato) attrList.add("Vibrato")
 
-                sb.appendLine("  │ %-3d | %-6s | %-4d | %-7.1f | %-6.2f | %-6d | %-6.2f | %-5s | %-5s | %-6d | %-5s | %-9d | %-8s | %s".format(
-                    nIdx + 1, pitchName, n.midiNote, freq, n.position, ticks, n.duration, clefStr, handStr, n.voice, stemStr, n.beamGroup, n.accidental.name, attrList.joinToString(" • ")
-                ))
+                sb.appendLine("  │ ${nIdx + 1} | $pitchName | ${n.midiNote} | $freq | ${n.position} | $ticks | ${n.duration} | $clefStr | $handStr | ${n.voice} | $stemStr | ${n.beamGroup} | ${n.accidental.name} | ${attrList.joinToString(" • ")}")
             }
             sb.appendLine("  └─" + "─".repeat(116))
         } else {
@@ -502,10 +501,10 @@ fun Score.dumpAsText(): String {
 
         if (measure.rests.isNotEmpty()) {
             sb.appendLine("  ┌─ RESTS TABLE (${measure.rests.size} elements):")
-            sb.appendLine("  │ %-3s | %-6s | %-6s | %-6s | %-5s".format("Idx", "Glyph", "Pos(b)", "Dur(b)", "Voice"))
+            sb.appendLine("  │ Idx | Pitch | MIDI | Freq(Hz) | Pos(b) | Ticks | Dur(b) | Clef | Hand | Voice | Stem | BeamGrp | Accidental | Attributes")
             sb.appendLine("  ├─" + "─".repeat(45))
             measure.rests.forEachIndexed { rIdx, r ->
-                sb.appendLine("  │ %-3d | %-6s | %-6.2f | %-6.2f | %-5d".format(rIdx + 1, r.symbolChar, r.position, r.duration, r.voice))
+                sb.appendLine("  │ ${rIdx + 1} | ${r.symbolChar} | ${r.position} | ${r.duration} | ${r.voice}")
             }
             sb.appendLine("  └─" + "─".repeat(45))
         }
@@ -516,8 +515,8 @@ fun Score.dumpAsText(): String {
             val vRestsSum = measure.rests.filter { it.voice == v }.sumOf { it.duration.toDouble() }
             val totalVoiceBeats = vDurationSum + vRestsSum
             val drift = totalVoiceBeats - nominalCapacity
-            val status = if (kotlin.math.abs(drift) < 0.05) "BALANCED" else "DRIFT: %+.2fb".format(drift)
-            sb.appendLine("  [Voice $v Audit]: Notes=${vNotes.size} | NotesDur=%.2fb | RestsDur=%.2fb | Total=%.2fb / %.2fb [$status]".format(vDurationSum, vRestsSum, totalVoiceBeats, nominalCapacity))
+            val status = if (kotlin.math.abs(drift) < 0.05) "BALANCED" else "DRIFT: $drift"
+            sb.appendLine("  [Voice $v Audit]: Notes=${vNotes.size} | NotesDur=${vDurationSum}b | RestsDur=${vRestsSum}b | Total=${totalVoiceBeats}b / ${nominalCapacity}b [$status]")
         }
 
         sb.appendLine()

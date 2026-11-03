@@ -1,13 +1,6 @@
 package com.creativeblisslabs.notation.parser
 
 import com.creativeblisslabs.notation.model.*
-import com.creativeblisslabs.notation.model.*
-import com.creativeblisslabs.notation.model.*
-import com.creativeblisslabs.notation.model.*
-import com.creativeblisslabs.notation.model.*
-import com.creativeblisslabs.notation.model.*
-import com.creativeblisslabs.notation.model.*
-import com.creativeblisslabs.notation.model.*
 
 /**
  * 100% faithful cross-platform parser for standard MIDI (*.mid) and MusicXML (*.musicxml / *.xml) scores.
@@ -38,11 +31,11 @@ object MidiFileParser {
         val title = xmlTag(xml, "work-title")
             ?: xmlTag(xml, "movement-title")
             ?: defaultTitle.substringBeforeLast(".")
-        val composer = Regex("""<creator[^>]*type=["']composer["'][^>]*>(.*?)</creator>""", RegexOption.DOT_MATCHES_ALL)
+        val composer = Regex("""(?s)<creator[^>]*type=["']composer["'][^>]*>(.*?)</creator>""")
             .find(xml)?.groupValues?.get(1)?.trim() ?: "MusicXML Composer"
 
         var globalTempo = 120f
-        Regex("""<sound[^>]*tempo=["']([0-9.]+)["']""").find(xml)?.groupValues?.get(1)?.toFloatOrNull()?.let {
+        Regex("""(?s)<sound[^>]*tempo=["']([0-9.]+)["']""").find(xml)?.groupValues?.get(1)?.toFloatOrNull()?.let {
             if (it > 10f) globalTempo = it
         }
 
@@ -52,7 +45,7 @@ object MidiFileParser {
         var currentBeatType = 4
         var globalKeySig = KeySignature.C_MAJOR
 
-        val measureBlocks = Regex("""<measure\b[^>]*>(.*?)</measure>""", RegexOption.DOT_MATCHES_ALL)
+        val measureBlocks = Regex("""(?s)<measure\b[^>]*>(.*?)</measure>""")
             .findAll(xml)
             .map { it.groupValues[1] }
             .toList()
@@ -86,7 +79,7 @@ object MidiFileParser {
             var lastNoteStartPosBeats = 0f
 
             // Iterate through <note>, <backup>, and <forward> elements in document order
-            val tokenRegex = Regex("""<(note|backup|forward)\b[^>]*>(.*?)</\1>""", RegexOption.DOT_MATCHES_ALL)
+            val tokenRegex = Regex("""(?s)<(note|backup|forward)\b[^>]*>(.*?)</\1>""")
             for (match in tokenRegex.findAll(mXml)) {
                 val tagType = match.groupValues[1]
                 val body = match.groupValues[2]
@@ -257,7 +250,7 @@ object MidiFileParser {
     }
 
     private fun xmlTag(xml: String, tag: String): String? {
-        val match = Regex("""<$tag(?:\s[^>]*)?>(.*?)</$tag>""", RegexOption.DOT_MATCHES_ALL).find(xml)
+        val match = Regex("""(?s)<$tag(?:\s[^>]*)?>(.*?)</$tag>""").find(xml)
         return match?.groupValues?.get(1)?.trim()
     }
 }
