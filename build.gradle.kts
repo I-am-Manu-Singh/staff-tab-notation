@@ -62,13 +62,13 @@ android {
     }
 }
 
-val javadocJar by tasks.registering(Jar::class) {
-    archiveClassifier.set("javadoc")
-}
-
 publishing {
     publications.withType<MavenPublication> {
-        artifact(javadocJar)
+        val javadocTask = tasks.register("${name}JavadocJar", Jar::class) {
+            archiveClassifier.set("javadoc")
+            archiveBaseName.set("${project.name}-$name")
+        }
+        artifact(javadocTask)
 
         pom {
             name.set("Staff and Tab Notation Viewer")
