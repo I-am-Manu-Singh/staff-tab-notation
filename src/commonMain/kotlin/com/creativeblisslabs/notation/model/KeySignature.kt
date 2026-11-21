@@ -1,5 +1,8 @@
 package com.creativeblisslabs.notation.model
 
+import kotlinx.serialization.Serializable
+
+@Serializable
 enum class KeySignature(val keyName: String, val accidentalsCount: Int, val isSharp: Boolean) {
     C_MAJOR("C Major / A Minor", 0, true),
     G_MAJOR("G Major / E Minor", 1, true),

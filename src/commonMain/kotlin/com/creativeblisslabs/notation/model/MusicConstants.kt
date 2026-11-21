@@ -14,4 +14,3 @@ object MusicConstants {
         return (octave * 7) + stepInOctave
     }
 }
-
